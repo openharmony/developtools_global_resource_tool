@@ -681,13 +681,15 @@ bool ResourceAppend::LoadResourceItemWin(const string &filePath)
     if (pBuffer == nullptr) {
         string errMsg = "map view of file error: " + to_string(GetLastError());
         PrintError(GetError(ERR_CODE_READ_FILE_ERROR).FormatCause(filePath.c_str(), errMsg.c_str()));
+        CloseHandle(hFileMap);
         CloseHandle(hReadFile);
         return result;
     }
 
     char* buffer = reinterpret_cast<char *>(pBuffer);
     result = LoadResourceItemFromMem(buffer, fileSize);
-    UnmapViewOfFile(hFileMap);
+    UnmapViewOfFile(pBuffer);
+    CloseHandle(hFileMap);
     CloseHandle(hReadFile);
     return result;
 }
