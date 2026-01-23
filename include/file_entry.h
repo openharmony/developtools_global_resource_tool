@@ -64,6 +64,11 @@ private:
     bool IsIgnore(const std::string &filename) const;
     static bool RemoveAllDirInner(const FileEntry &entry);
     static bool CreateDirsInner(const std::string &path, std::string::size_type offset);
+#ifdef _WIN32
+    static std::wstring AdaptLongPathW(const std::string &path);
+    static std::string Wstring2String(const std::wstring &wstr);
+    static std::wstring String2Wstring(const std::string &str);
+#endif
     FilePath filePath_;
     bool isFile_;
     static const std::string SEPARATE;

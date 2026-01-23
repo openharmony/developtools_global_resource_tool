@@ -63,24 +63,24 @@ const vector<unique_ptr<FileEntry>> FileEntry::GetChilds() const
     vector<unique_ptr<FileEntry>> children;
     string filePath = filePath_.GetPath();
 #ifdef _WIN32
-    WIN32_FIND_DATA findData;
+    WIN32_FIND_DATAW findData;
     string temp(filePath + "\\*.*");
-    HANDLE handle = FindFirstFile(AdaptLongPath(temp).c_str(), &findData);
+    HANDLE handle = FindFirstFileW(AdaptLongPathW(temp).c_str(), &findData);
     if (handle == INVALID_HANDLE_VALUE) {
         return children;
     }
 
     do {
-        string filename(findData.cFileName);
-        if (IsIgnore(filename)) {
+        wstring filename(findData.cFileName);
+        if (filename == L"." || filename == L"..") {
             continue;
         }
-
-        filePath = filePath_.GetPath() + SEPARATE + filename;
-        unique_ptr<FileEntry> f = make_unique<FileEntry>(filePath);
+        wstring parentPathW = String2Wstring(filePath);
+        string childPath = Wstring2String(parentPathW + L"\\" + filename);
+        unique_ptr<FileEntry> f = make_unique<FileEntry>(childPath);
         f->Init();
         children.push_back(move(f));
-    } while (FindNextFile(handle, &findData));
+    } while (FindNextFileW(handle, &findData));
     FindClose(handle);
 #else
     DIR *handle = opendir(filePath.c_str());
@@ -117,7 +117,7 @@ const FileEntry::FilePath &FileEntry::GetFilePath() const
 bool FileEntry::Exist(const string &path)
 {
 #ifdef _WIN32
-    return PathFileExists(AdaptLongPath(path).c_str());
+    return PathFileExistsW(AdaptLongPathW(path).c_str());
 #else
     struct stat s;
     if (stat(path.c_str(), &s) != 0) {
@@ -158,7 +158,7 @@ bool FileEntry::CreateDirs(const string &path)
 bool FileEntry::CopyFileInner(const string &src, const string &dst)
 {
 #ifdef _WIN32
-    if (!CopyFile(AdaptLongPath(src).c_str(), AdaptLongPath(dst).c_str(), false)) {
+    if (!CopyFileW(AdaptLongPathW(src).c_str(), AdaptLongPathW(dst).c_str(), false)) {
         PrintError(GetError(ERR_CODE_COPY_FILE_ERROR).FormatCause(src.c_str(), dst.c_str(), strerror(errno)));
         return false;
     }
@@ -177,7 +177,7 @@ bool FileEntry::CopyFileInner(const string &src, const string &dst)
 bool FileEntry::IsDirectory(const string &path)
 {
 #ifdef _WIN32
-    if (!PathIsDirectory(AdaptLongPath(path).c_str())) {
+    if (!PathIsDirectoryW(AdaptLongPathW(path).c_str())) {
         return false;
     }
     return true;
@@ -307,7 +307,7 @@ bool FileEntry::RemoveAllDirInner(const FileEntry &entry)
     }
     if (entry.IsFile()) {
 #ifdef _WIN32
-        bool result = remove(AdaptLongPath(path).c_str()) == 0;
+        bool result = DeleteFileW(AdaptLongPathW(path).c_str());
 #else
         bool result = remove(path.c_str()) == 0;
 #endif
@@ -324,7 +324,7 @@ bool FileEntry::RemoveAllDirInner(const FileEntry &entry)
         }
     }
 #ifdef _WIN32
-    bool result = rmdir(AdaptLongPath(path).c_str()) == 0;
+    bool result = RemoveDirectoryW(AdaptLongPathW(path).c_str());
 #else
     bool result = rmdir(path.c_str()) == 0;
 #endif
@@ -340,7 +340,7 @@ bool FileEntry::CreateDirsInner(const string &path, string::size_type offset)
     string::size_type pos = path.find_first_of(SEPARATE.front(), offset);
     if (pos == string::npos) {
 #ifdef _WIN32
-        return CreateDirectory(AdaptLongPath(path).c_str(), nullptr) != 0;
+        return CreateDirectoryW(AdaptLongPathW(path).c_str(), nullptr);
 #else
         return mkdir(path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) == 0;
 #endif
@@ -349,7 +349,7 @@ bool FileEntry::CreateDirsInner(const string &path, string::size_type offset)
     string subPath = path.substr(0, pos + 1);
     if (!Exist(subPath)) {
 #ifdef _WIN32
-        if (!CreateDirectory(AdaptLongPath(subPath).c_str(), nullptr)) {
+        if (!CreateDirectoryW(AdaptLongPathW(subPath).c_str(), nullptr)) {
 #else
         if (mkdir(subPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
 #endif
@@ -393,6 +393,55 @@ string FileEntry::AdaptLongPath(const string &path)
 #endif
     return path;
 }
+
+#ifdef _WIN32
+wstring FileEntry::AdaptLongPathW(const string &path)
+{
+    wstring longPathW = String2Wstring(path);
+    if (longPathW.size() >= MAX_PATH - 12) { // the max file path can not exceed 260 - 12
+        return LR"(\\?\)" + longPathW;
+    }
+    return longPathW;
+}
+
+string FileEntry::Wstring2String(const wstring &wstr)
+{
+    string res;
+    int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), nullptr, 0, nullptr, nullptr);
+    if (len <= 0) {
+        cout << "Warning: WideCharToMultiByte failed: " << wstr.c_str() << endl;
+        return res;
+    }
+    char *buffer = new char[len + 1];
+    if (buffer == nullptr) {
+        return res;
+    }
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), buffer, len, nullptr, nullptr);
+    buffer[len] = '\0';
+    res.append(buffer);
+    delete[] buffer;
+    return res;
+}
+
+wstring FileEntry::String2Wstring(const string &str)
+{
+    wstring res;
+    int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), nullptr, 0);
+    if (len < 0) {
+        cout << "Warning: MultiByteToWideChar failed: " << str.c_str() << endl;
+        return res;
+    }
+    wchar_t *buffer = new wchar_t[len + 1];
+    if (buffer == nullptr) {
+        return res;
+    }
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), buffer, len);
+    buffer[len] = '\0';
+    res.append(buffer);
+    delete[] buffer;
+    return res;
+}
+#endif
 }
 }
 }
