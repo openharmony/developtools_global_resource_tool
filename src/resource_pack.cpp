@@ -281,8 +281,7 @@ uint32_t ResourcePack::GenerateTsHeader(const std::string &headerPath) const
 {
     Header tsHeader(headerPath);
     Header::HandleHeaderTail handleHeader = [](stringstream &buffer) {
-        buffer << Header::LICENSE_HEADER << "\n";
-        buffer << "//@ts-noCheck" << "\n";
+        buffer << Header::LICENSE_HEADER << "\n" << "//@ts-noCheck" << "\n";
     };
     if (!configJson_.isSupportTsHeader()) {
         return tsHeader.Create(handleHeader, nullptr, nullptr);
@@ -310,21 +309,18 @@ uint32_t ResourcePack::GenerateTsHeader(const std::string &headerPath) const
             }
             idsDeclare.append("{\n");
             for (const auto &nameId : it.second) {
-                idsDeclare.append("    \"").append(nameId.first).append("\" : ");
+                idsDeclare.append("    \"").append(nameId.first).append("\": ");
                 idsDeclare.append(to_string(nameId.second)).append(",\n");
             }
-            idsDeclare.append("  };\n");
-            typesDeclare.append("  readonly ").append(it.first).append(" = ").append(idsDeclare);
+            idsDeclare.append("  },\n");
+            typesDeclare.append("  \"").append(it.first).append("\": ").append(idsDeclare);
         }
         if (typesDeclare.empty()) {
             return;
         }
-        std::string tableClassName = "__res_table_" + moduleName + "__";
-        buffer << "export default class " << tableClassName << " {\n";
-        buffer << typesDeclare << "}\n";
         buffer << "if (!globalThis.__resourceTables__) {\n";
         buffer << "  globalThis.__resourceTables__ = {};\n}\n";
-        buffer << "globalThis.__resourceTables__[\"" << moduleName << "\"] = new " << tableClassName << "();\n";
+        buffer << "globalThis.__resourceTables__[\"" << moduleName << "\"] = {\n" << typesDeclare << "};";
     });
     return result;
 }
