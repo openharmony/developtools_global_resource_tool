@@ -117,7 +117,9 @@ const FileEntry::FilePath &FileEntry::GetFilePath() const
 bool FileEntry::Exist(const string &path)
 {
 #ifdef _WIN32
-    return PathFileExistsW(AdaptLongPathW(path).c_str());
+    if (!PathFileExists(AdaptLongPath(path).c_str())) {
+        return PathFileExistsW(AdaptLongPathW(path).c_str());
+    }
 #else
     struct stat s;
     if (stat(path.c_str(), &s) != 0) {
