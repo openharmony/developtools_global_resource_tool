@@ -148,7 +148,7 @@ int64_t IdWorker::GetCurId()
         return static_cast<int64_t>(appId_++);
     }
     while (appId_ <= maxId_) {
-        uint64_t id = appId_;
+        int64_t id = static_cast<int64_t>(appId_);
         auto ret = find_if(appDefinedIds_.begin(), appDefinedIds_.end(), [id](const auto &iter) {
             return id == iter.second.id;
         });
