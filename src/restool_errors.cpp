@@ -866,6 +866,7 @@ void PrintError(const ErrorInfo &error)
     if (!moreInfo.empty()) {
         errMsg.append("  > More info: ").append(moreInfo).append("\n");
     }
+    errMsg = FileEntry::Utf8ToSysDefault(errMsg);
     std::cerr << errMsg;
 }
 } // namespace Restool
