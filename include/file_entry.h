@@ -19,6 +19,10 @@
 #include <memory>
 #include <vector>
 #include <string>
+#ifdef _WIN32
+#include "shlwapi.h"
+#include "windows.h"
+#endif
 
 namespace OHOS {
 namespace Global {
@@ -59,6 +63,7 @@ public:
     static bool IsDirectory(const std::string &path);
     static std::string RealPath(const std::string &path);
     static std::string AdaptLongPath(const std::string &path);
+    static std::string Utf8ToSysDefault(const std::string &path);
 
 private:
     bool IsIgnore(const std::string &filename) const;
@@ -66,8 +71,8 @@ private:
     static bool CreateDirsInner(const std::string &path, std::string::size_type offset);
 #ifdef _WIN32
     static std::wstring AdaptLongPathW(const std::string &path);
-    static std::string Wstring2String(const std::wstring &wstr);
-    static std::wstring String2Wstring(const std::string &str);
+    static std::string Wstring2String(const std::wstring &wstr, const int codePage = CP_UTF8);
+    static std::wstring String2Wstring(const std::string &str, const int codePage = CP_UTF8);
 #endif
     FilePath filePath_;
     bool isFile_;
