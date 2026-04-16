@@ -396,6 +396,16 @@ string FileEntry::AdaptLongPath(const string &path)
     return path;
 }
 
+string FileEntry::Utf8ToSysDefault(const std::string &utf8Str)
+{
+#ifdef _WIN32
+    wstring wStr = String2Wstring(utf8Str, CP_UTF8);
+    return Wstring2String(wStr, CP_ACP);
+#else
+    return utf8Str;
+#endif
+}
+
 #ifdef _WIN32
 wstring FileEntry::AdaptLongPathW(const string &path)
 {
@@ -406,10 +416,10 @@ wstring FileEntry::AdaptLongPathW(const string &path)
     return longPathW;
 }
 
-string FileEntry::Wstring2String(const wstring &wstr)
+string FileEntry::Wstring2String(const wstring &wstr, const int codePage)
 {
     string res;
-    int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), nullptr, 0, nullptr, nullptr);
+    int len = WideCharToMultiByte(codePage, 0, wstr.c_str(), wstr.size(), nullptr, 0, nullptr, nullptr);
     if (len <= 0) {
         cout << "Warning: WideCharToMultiByte failed: " << wstr.c_str() << endl;
         return res;
@@ -418,17 +428,17 @@ string FileEntry::Wstring2String(const wstring &wstr)
     if (buffer == nullptr) {
         return res;
     }
-    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), buffer, len, nullptr, nullptr);
+    WideCharToMultiByte(codePage, 0, wstr.c_str(), wstr.size(), buffer, len, nullptr, nullptr);
     buffer[len] = '\0';
     res.append(buffer);
     delete[] buffer;
     return res;
 }
 
-wstring FileEntry::String2Wstring(const string &str)
+wstring FileEntry::String2Wstring(const string &str, const int codePage)
 {
     wstring res;
-    int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), nullptr, 0);
+    int len = MultiByteToWideChar(codePage, 0, str.c_str(), str.size(), nullptr, 0);
     if (len < 0) {
         cout << "Warning: MultiByteToWideChar failed: " << str.c_str() << endl;
         return res;
@@ -437,7 +447,7 @@ wstring FileEntry::String2Wstring(const string &str)
     if (buffer == nullptr) {
         return res;
     }
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), buffer, len);
+    MultiByteToWideChar(codePage, 0, str.c_str(), str.size(), buffer, len);
     buffer[len] = '\0';
     res.append(buffer);
     delete[] buffer;
