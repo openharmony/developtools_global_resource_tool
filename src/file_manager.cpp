@@ -157,6 +157,9 @@ bool FileManager::ScaleIcon(const string &output, ResourceItem &item)
     if (!CompressionParser::GetCompressionParser()->CheckAndScaleIcon(item.GetFilePath(), dst, scaleDst)) {
         return false;
     }
+    string scaleFileName = FileEntry::FilePath(scaleDst).GetFilename();
+    dst = FileEntry::FilePath(output).Append(RESOURCES_DIR).Append(item.GetLimitKey()).Append(media)
+        .Append(scaleFileName).GetPath();
     // compress scaled icon
     if (!CompressionParser::GetCompressionParser()->CopyAndTranscode(scaleDst, dst)) {
         return false;
