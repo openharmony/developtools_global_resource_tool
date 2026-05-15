@@ -299,6 +299,24 @@ public:
     */
     static bool IsHarResource(int64_t id);
 
+    /**
+     * @brief Convert string to int
+     * @param str: input string
+     * @param value: output int value
+     * @param base: conversion base, default 10
+     * @return true if success, other false
+    */
+    static bool StrToInt(const std::string &str, int &value, int base = 10);
+
+    /**
+     * @brief Convert string to long long
+     * @param str: input string
+     * @param value: output long long value
+     * @param base: conversion base, default 10
+     * @return true if success, other false
+    */
+    static bool StrToLongLong(const std::string &str, long long &value, int base = 10);
+
 private:
     static const std::map<std::string, IgnoreType> DEFAULT_IGNORE_FILE_REGEX;
     static std::string GetLocaleLimitkey(const KeyParam &KeyParam);
