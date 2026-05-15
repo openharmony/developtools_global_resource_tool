@@ -59,6 +59,7 @@ const static int8_t INVALID_ID = -1;
 const static int MIN_SUPPORT_NEW_MODULE_API_VERSION = 20;
 const static int MIN_SUPPORT_TS_HEADER_API_VERSION = 23;
 const static int API_VERSION_DIVISOR = 1000;
+const static int HEX_BASE = 16;
 
 enum class IgnoreType {
     IGNORE_FILE,
