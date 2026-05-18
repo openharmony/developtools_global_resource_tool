@@ -398,7 +398,11 @@ bool ConfigParser::ParseJsonArrayRef(cJSON *parent, const string &key, cJSON *no
             return false;
         }
         if (update) {
-            cJSON_AddItemToArray(array, cJSON_CreateNumber(atoll(value.c_str())));
+            long long idValue = 0;
+            if (!ResourceUtil::StrToLongLong(value, idValue)) {
+                return false;
+            }
+            cJSON_AddItemToArray(array, cJSON_CreateNumber(idValue));
         }
     }
     cJSON_AddItemToObject(parent, (key + "Id").c_str(), array);
@@ -421,8 +425,12 @@ bool ConfigParser::ParseJsonStringRef(cJSON *parent, const string &key, cJSON *n
         return false;
     }
     if (update) {
-        cJSON_AddItemToObject(parent, (key + "Id").c_str(), cJSON_CreateNumber(atoll(value.c_str())));
-        AddCheckNode(key, static_cast<uint32_t>(atoll(value.c_str())));
+        long long idValue = 0;
+        if (!ResourceUtil::StrToLongLong(value, idValue)) {
+            return false;
+        }
+        cJSON_AddItemToObject(parent, (key + "Id").c_str(), cJSON_CreateNumber(idValue));
+        AddCheckNode(key, static_cast<uint32_t>(idValue));
     }
     return true;
 }

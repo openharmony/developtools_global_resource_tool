@@ -476,7 +476,7 @@ const std::map<uint32_t, ErrorInfo> ERRORS_MAP = {
     { ERR_CODE_INVALID_SYMBOL,
       { ERR_CODE_INVALID_SYMBOL,
         ERR_TYPE_RESOURCE_PACK,
-        "Invalid value '%d' of the symbol resource '%s'. It should be in the scope [0xF0000,0xFFFFF] or "
+        "Invalid value '%s' of the symbol resource '%s'. It should be in the scope [0xF0000,0xFFFFF] or "
         "[0x100000,0x10FFFF]."
         "",
         {},
