@@ -416,9 +416,9 @@ bool JsonCompiler::CheckJsonSymbolValue(const cJSON *valueNode, const ResourceIt
     if (regex_match(unicodeStr, regex("^\\$(ohos:)?symbol:.*"))) {
         return true;
     }
-    int unicode = strtol(unicodeStr.c_str(), nullptr, 16);
-    if (!ResourceUtil::isUnicodeInPlane15or16(unicode)) {
-        PrintError(GetError(ERR_CODE_INVALID_SYMBOL).FormatCause(unicode, resourceItem.GetName().c_str())
+    int unicode = 0;
+    if (!ResourceUtil::StrToInt(unicodeStr, unicode, HEX_BASE) || !ResourceUtil::isUnicodeInPlane15or16(unicode)) {
+        PrintError(GetError(ERR_CODE_INVALID_SYMBOL).FormatCause(unicodeStr.c_str(), resourceItem.GetName().c_str())
             .SetPosition(resourceItem.GetFilePath()));
         return false;
     }

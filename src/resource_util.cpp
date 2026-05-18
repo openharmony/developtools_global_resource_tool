@@ -15,6 +15,7 @@
 
 #include "resource_util.h"
 #include <algorithm>
+#include <climits>
 #include <cstdlib>
 #include <fstream>
 #include <mutex>
@@ -580,6 +581,42 @@ bool ResourceUtil::IsHarResource(int64_t id)
 {
     std::lock_guard<std::mutex> lock(g_harResourceMutex);
     return g_harResourceIds.count(id);
+}
+
+bool ResourceUtil::StrToInt(const string &str, int &value, int base)
+{
+    if (str.empty()) {
+        return false;
+    }
+    char *end = nullptr;
+    errno = 0;
+    long result = strtol(str.c_str(), &end, base);
+    if (end == str.c_str() || *end != '\0') {
+        return false;
+    }
+    if (errno == ERANGE || result < INT_MIN || result > INT_MAX) {
+        return false;
+    }
+    value = static_cast<int>(result);
+    return true;
+}
+
+bool ResourceUtil::StrToLongLong(const string &str, long long &value, int base)
+{
+    if (str.empty()) {
+        return false;
+    }
+    char *end = nullptr;
+    errno = 0;
+    long long result = strtoll(str.c_str(), &end, base);
+    if (end == str.c_str() || *end != '\0') {
+        return false;
+    }
+    if (errno == ERANGE || result == LLONG_MAX || result == LLONG_MIN) {
+        return false;
+    }
+    value = result;
+    return true;
 }
 }
 }
