@@ -400,6 +400,7 @@ bool ConfigParser::ParseJsonArrayRef(cJSON *parent, const string &key, cJSON *no
         if (update) {
             long long idValue = 0;
             if (!ResourceUtil::StrToLongLong(value, idValue)) {
+                cJSON_Delete(array);
                 return false;
             }
             cJSON_AddItemToArray(array, cJSON_CreateNumber(idValue));
