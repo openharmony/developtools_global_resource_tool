@@ -80,10 +80,7 @@ shared_ptr<CompressionParser> CompressionParser::GetCompressionParser(const stri
 
 shared_ptr<CompressionParser> CompressionParser::GetCompressionParser()
 {
-    if (!compressionParseMgr) {
-        compressionParseMgr = make_shared<CompressionParser>();
-    }
-    return compressionParseMgr;
+    return GetCompressionParser("");
 }
 
 uint32_t CompressionParser::Init()
