@@ -144,6 +144,9 @@ bool SelectCompileParse::IsSelectableMccmnc(vector<KeyParam> &keyParams, size_t 
     if (limit.empty()) {
         return true;
     }
+    if (index >= keyParams.size()) {
+        return false;
+    }
     Mccmnc mccmncLimit({keyParams[index++], {KeyType::OTHER, 0}});
     if (index < keyParams.size() && keyParams[index].keyType == KeyType::MNC) {
         mccmncLimit.mnc = keyParams[index];
@@ -178,6 +181,9 @@ bool SelectCompileParse::IsSelectableLocale(vector<KeyParam> &keyParams, size_t 
     if (limit.empty()) {
         return true;
     }
+    if (index >= keyParams.size()) {
+        return false;
+    }
     Locale localeLimit({keyParams[index++], {KeyType::OTHER, 0}, {KeyType::OTHER, 0}});
     for (; index < keyParams.size(); index++) {
         if (keyParams[index].keyType == KeyType::SCRIPT) {
@@ -199,6 +205,9 @@ bool SelectCompileParse::IsSelectableOther(vector<KeyParam> &keyParams, size_t &
 {
     if (limit.empty()) {
         return true;
+    }
+    if (index >= keyParams.size()) {
+        return false;
     }
     return find(limit.begin(), limit.end(), keyParams[index]) != limit.end();
 }
