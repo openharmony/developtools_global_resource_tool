@@ -60,6 +60,7 @@ public:
     static bool RemoveFile(const std::string &path);
     static bool CreateDirs(const std::string &path);
     static bool CopyFileInner(const std::string &src, const std::string &dst);
+    static bool MakeWritable(const std::string &path);
     static bool IsDirectory(const std::string &path);
     static std::string RealPath(const std::string &path);
     static std::string AdaptLongPath(const std::string &path);
