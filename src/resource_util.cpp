@@ -112,6 +112,7 @@ bool ResourceUtil::OpenJsonFile(const string &path, cJSON **root, const bool &pr
 
 bool ResourceUtil::SaveToJsonFile(const string &path, const cJSON *root)
 {
+    FileEntry::MakeWritable(path);
     ofstream out(FileEntry::AdaptLongPath(path), ofstream::out | ofstream::binary);
     if (!out.is_open()) {
         PrintError(GetError(ERR_CODE_OPEN_FILE_ERROR).FormatCause(path.c_str(), strerror(errno)));
