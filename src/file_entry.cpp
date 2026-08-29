@@ -164,6 +164,9 @@ bool FileEntry::CopyFileInner(const string &src, const string &dst)
         PrintError(GetError(ERR_CODE_COPY_FILE_ERROR).FormatCause(src.c_str(), dst.c_str(), strerror(errno)));
         return false;
     }
+    if (!MakeWritable(dst)) {
+        cout << "Warning: failed to make file writable: " << dst << endl;
+    }
 #else
     ifstream in(src, ios::binary);
     ofstream out(dst, ios::binary);
@@ -172,8 +175,37 @@ bool FileEntry::CopyFileInner(const string &src, const string &dst)
         return false;
     }
     out << in.rdbuf();
+    if (!MakeWritable(dst)) {
+        cout << "Warning: failed to make file writable: " << dst << endl;
+    }
 #endif
     return true;
+}
+
+bool FileEntry::MakeWritable(const string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+#ifdef _WIN32
+    DWORD attrs = GetFileAttributesW(AdaptLongPathW(path).c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+        return false;
+    }
+    if (!(attrs & FILE_ATTRIBUTE_READONLY)) {
+        return true;
+    }
+    return SetFileAttributesW(AdaptLongPathW(path).c_str(), attrs & ~FILE_ATTRIBUTE_READONLY) != 0;
+#else
+    struct stat s;
+    if (stat(path.c_str(), &s) != 0) {
+        return false;
+    }
+    if (s.st_mode & S_IWUSR) {
+        return true;
+    }
+    return chmod(path.c_str(), s.st_mode | S_IWUSR) == 0;
+#endif
 }
 
 bool FileEntry::IsDirectory(const string &path)
@@ -309,8 +341,14 @@ bool FileEntry::RemoveAllDirInner(const FileEntry &entry)
     }
     if (entry.IsFile()) {
 #ifdef _WIN32
+        if (!MakeWritable(path)) {
+            cout << "Warning: failed to make file writable: " << path << endl;
+        }
         bool result = DeleteFileW(AdaptLongPathW(path).c_str());
 #else
+        if (!MakeWritable(path)) {
+            cout << "Warning: failed to make file writable: " << path << endl;
+        }
         bool result = remove(path.c_str()) == 0;
 #endif
         if (!result) {
