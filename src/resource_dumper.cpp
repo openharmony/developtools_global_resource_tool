@@ -119,7 +119,11 @@ uint32_t ResourceDumper::ReadFileFromZip(
     }
 
     len = fileInfo.uncompressed_size;
-    buffer = std::make_unique<char[]>(len);
+    if (len == 0) {
+        PrintError(GetError(ERR_CODE_PARSE_HAP_ERROR).FormatCause("invalid file size in zipfile"));
+        return RESTOOL_ERROR;
+    }
+    buffer = std::make_unique<char[]>(len + 1);
     if (!buffer) {
         return RESTOOL_ERROR;
     }
@@ -129,9 +133,11 @@ uint32_t ResourceDumper::ReadFileFromZip(
         return RESTOOL_ERROR;
     }
     err = unzReadCurrentFile(zipFile, buffer.get(), len);
-    if (err < 0) {
+    if (err < 0 || (size_t)err != len) {
+        PrintError(GetError(ERR_CODE_PARSE_HAP_ERROR).FormatCause("read file from zip failed"));
         return RESTOOL_ERROR;
     }
+    buffer[len] = '\0';
     return RESTOOL_SUCCESS;
 }
 
