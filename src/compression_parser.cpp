@@ -558,13 +558,13 @@ bool CompressionParser::CheckAndTranscode(const string &src, string &dst, string
 
 bool CompressionParser::CopyForTrans(const string &src, const string &originDst, const string &dst)
 {
-    string srcSuffix;
-    string dstSuffix;
-    auto srcIndex = src.find_last_of(".");
-    auto dstIndex = dst.find_last_of(".");
-    if (srcIndex != string::npos && dstIndex != string::npos) {
-        srcSuffix = src.substr(srcIndex + 1);
-        dstSuffix = dst.substr(dstIndex + 1);
+    FileEntry::FilePath srcFile(src);
+    FileEntry::FilePath dstFile(dst);
+    string srcSuffix = srcFile.GetExtension();
+    string dstSuffix = dstFile.GetExtension();
+    if (srcSuffix.empty() || dstSuffix.empty()) {
+        srcSuffix.clear();
+        dstSuffix.clear();
     }
     auto ret = false;
     if (srcSuffix == dstSuffix) {
