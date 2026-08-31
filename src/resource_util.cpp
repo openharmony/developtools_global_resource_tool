@@ -15,7 +15,7 @@
 
 #include "resource_util.h"
 #include <algorithm>
-#include <climits>
+#include <charconv>
 #include <cstdlib>
 #include <fstream>
 #include <mutex>
@@ -589,16 +589,20 @@ bool ResourceUtil::StrToInt(const string &str, int &value, int base)
     if (str.empty()) {
         return false;
     }
-    char *end = nullptr;
-    errno = 0;
-    long result = strtol(str.c_str(), &end, base);
-    if (end == str.c_str() || *end != '\0') {
+    const char *first = str.data();
+    const char *last = first + str.size();
+    if (base == 16 && str.size() >= 2 && first[0] == '0' && (first[1] == 'x' || first[1] == 'X')) {
+        first += 2;
+    }
+    if (first == last) {
         return false;
     }
-    if (errno == ERANGE || result < INT_MIN || result > INT_MAX) {
+    int result = 0;
+    auto [ptr, ec] = from_chars(first, last, result, base);
+    if (ec != std::errc{} || ptr != last) {
         return false;
     }
-    value = static_cast<int>(result);
+    value = result;
     return true;
 }
 
@@ -607,13 +611,17 @@ bool ResourceUtil::StrToLongLong(const string &str, long long &value, int base)
     if (str.empty()) {
         return false;
     }
-    char *end = nullptr;
-    errno = 0;
-    long long result = strtoll(str.c_str(), &end, base);
-    if (end == str.c_str() || *end != '\0') {
+    const char *first = str.data();
+    const char *last = first + str.size();
+    if (base == 16 && str.size() >= 2 && first[0] == '0' && (first[1] == 'x' || first[1] == 'X')) {
+        first += 2;
+    }
+    if (first == last) {
         return false;
     }
-    if (errno == ERANGE || result == LLONG_MAX || result == LLONG_MIN) {
+    long long result = 0;
+    auto [ptr, ec] = from_chars(first, last, result, base);
+    if (ec != std::errc{} || ptr != last) {
         return false;
     }
     value = result;
