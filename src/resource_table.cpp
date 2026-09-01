@@ -702,8 +702,8 @@ bool ResourceTable::ReadDataRecordStart(basic_istream<char> &in, RecordItem &rec
         PrintError(GetError(ERR_CODE_INVALID_RESOURCE_INDEX).FormatCause("value size error"));
         return false;
     }
-    int8_t values[value_size];
-    in.read(reinterpret_cast<char *>(&values), value_size);
+    std::vector<int8_t> values(value_size);
+    in.read(reinterpret_cast<char *>(values.data()), value_size);
 
     uint16_t name_size = 0;
     in.read(reinterpret_cast<char *>(&name_size), sizeof(uint16_t));
@@ -711,9 +711,9 @@ bool ResourceTable::ReadDataRecordStart(basic_istream<char> &in, RecordItem &rec
         PrintError(GetError(ERR_CODE_INVALID_RESOURCE_INDEX).FormatCause("name size error"));
         return false;
     }
-    int8_t name[name_size];
-    in.read(reinterpret_cast<char *>(name), name_size);
-    string filename(reinterpret_cast<char *>(name));
+    std::vector<int8_t> name(name_size);
+    in.read(reinterpret_cast<char *>(name.data()), name_size);
+    string filename(reinterpret_cast<char *>(name.data()), name_size);
 
     auto idTableOffset = datas.find(offset);
     if (idTableOffset == datas.end()) {
@@ -734,7 +734,7 @@ bool ResourceTable::ReadDataRecordStart(basic_istream<char> &in, RecordItem &rec
     const vector<KeyParam> &keyparams = limitKeys.find(datas.find(offset)->second.second)->second;
     ResourceItem resourceitem(filename, keyparams, g_resTypeMap.find(record.resType)->second);
     resourceitem.SetLimitKey(ResourceUtil::PaserKeyParam(keyparams));
-    resourceitem.SetData(values, value_size);
+    resourceitem.SetData(values.data(), value_size);
     resourceitem.MarkCoverable();
     resInfos[record.id].push_back(resourceitem);
     return true;
@@ -895,7 +895,7 @@ bool ResourceTable::ReadResources(std::basic_istream<char> &in, const ResIndex &
 bool ResourceTable::ReadResInfo(std::basic_istream<char> &in, ResInfo &resInfo, uint32_t offset, uint64_t length)
 {
     in.seekg(offset, ios::beg);
-    if (offset + ResInfo::RES_INFO_LEN > length) {
+    if ((uint64_t)offset + (uint64_t)ResInfo::RES_INFO_LEN > length) {
         PrintError(GetError(ERR_CODE_INVALID_RESOURCE_INDEX).FormatCause("ResInfo length error"));
         return false;
     }
@@ -933,10 +933,10 @@ bool ResourceTable::ReadResourceItem(std::basic_istream<char> &in, ResourceItem 
         PrintError(GetError(ERR_CODE_INVALID_RESOURCE_INDEX).FormatCause("resource length error"));
         return false;
     }
-    int8_t data[dataLen + 1];
-    in.read(reinterpret_cast<char *>(data), dataLen);
+    std::vector<int8_t> data(dataLen + 1, 0);
+    in.read(reinterpret_cast<char *>(data.data()), dataLen);
 
-    resourceItem.SetData(data, dataLen + 1);
+    resourceItem.SetData(data.data(), dataLen + 1);
     resourceItem.MarkCoverable();
     return true;
 }

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <regex>
 #include "config_parser.h"
 #include "header.h"
@@ -412,15 +413,19 @@ bool ResourceAppend::LoadResourceItem(const string &filePath)
     }
     
     in.seekg(0, in.end);
-    int32_t length = in.tellg();
+    int64_t length = static_cast<int64_t>(in.tellg());
     in.seekg(0, in.beg);
     if (length <= 0) {
         PrintError(GetError(ERR_CODE_READ_FILE_ERROR).FormatCause(filePath.c_str(), "file is empty"));
         return false;
     }
-    char buffer[length];
-    in.read(buffer, length);
-    return LoadResourceItemFromMem(buffer, length);
+    if (length > static_cast<int64_t>(std::numeric_limits<int32_t>::max())) {
+        PrintError(GetError(ERR_CODE_READ_FILE_ERROR).FormatCause(filePath.c_str(), "file too large"));
+        return false;
+    }
+    std::vector<char> buffer(static_cast<size_t>(length));
+    in.read(buffer.data(), length);
+    return LoadResourceItemFromMem(buffer.data(), static_cast<int32_t>(length));
 #endif
 }
 
@@ -603,7 +608,7 @@ bool ResourceAppend::LoadResourceItemFromMem(const char buffer[], int32_t length
 string ResourceAppend::ParseString(const char buffer[], int32_t length, int32_t &offset) const
 {
     int32_t size = ParseInt32(buffer, length, offset);
-    if (size < 0 || offset + size > length) {
+    if (size < 0 || static_cast<int64_t>(offset) + static_cast<int64_t>(size) > static_cast<int64_t>(length)) {
         offset = length;
         return "";
     }
@@ -619,7 +624,7 @@ string ResourceAppend::ParseString(const char buffer[], int32_t length, int32_t 
 
 int32_t ResourceAppend::ParseInt32(const char buffer[], int32_t length, int32_t &offset) const
 {
-    if (offset + static_cast<int32_t>(sizeof(int32_t)) > length) {
+    if (static_cast<int64_t>(offset) + static_cast<int64_t>(sizeof(int32_t)) > static_cast<int64_t>(length)) {
         offset = length;
         return -1;
     }
