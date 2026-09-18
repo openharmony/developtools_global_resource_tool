@@ -148,8 +148,11 @@ const std::vector<std::string> ResourceItem::SplitValue() const
     }
     char *buffer = reinterpret_cast<char*>(data_);
     uint32_t index = 0;
-    while (index < dataLen_) {
-        uint16_t strLen = *reinterpret_cast<uint16_t*>(buffer + index);
+    while (index + sizeof(uint16_t) <= dataLen_) {
+        uint16_t strLen = 0;
+        if (memcpy_s(&strLen, sizeof(uint16_t), buffer + index, sizeof(uint16_t)) != EOK) {
+            return ret;
+        }
         index += sizeof(uint16_t);
         if (index + strLen >= dataLen_) {
             return ret;
