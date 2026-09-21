@@ -119,7 +119,7 @@ uint32_t ResourceDumper::ReadFileFromZip(
     }
 
     len = fileInfo.uncompressed_size;
-    if (len == 0) {
+    if (len == 0 || len > SIZE_MAX - 1) {
         PrintError(GetError(ERR_CODE_PARSE_HAP_ERROR).FormatCause("invalid file size in zipfile"));
         return RESTOOL_ERROR;
     }

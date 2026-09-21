@@ -874,7 +874,7 @@ bool ResourceTable::ReadResources(std::basic_istream<char> &in, const ResIndex &
     if (!ReadResInfo(in, resInfo, resIndex.offset, length)) {
         return RESTOOL_ERROR;
     }
-    uint64_t pos = resIndex.offset + ResInfo::RES_INFO_LEN;
+    uint64_t pos = (uint64_t)resIndex.offset + (uint64_t)ResInfo::RES_INFO_LEN;
     for (uint32_t resConfig = 0; resConfig < resInfo.valueCount; resConfig++) {
         uint32_t resConfigId;
         uint32_t dataOffset;
